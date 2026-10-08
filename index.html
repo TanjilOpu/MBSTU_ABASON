@@ -1,0 +1,845 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MBSTU Abason</title>
+
+
+  <link rel="icon" type="image/png" href="logo.png">
+
+  <link rel="apple-touch-icon" href="logo.png">
+
+
+  <link
+    href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap"
+    rel="stylesheet">
+
+
+  <link rel="stylesheet" href="style.css">
+
+
+  <style>
+    #loadingOverlay {
+      position: fixed;
+      inset: 0;
+      background: var(--bg);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 999;
+      gap: 16px;
+    }
+
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    .loading-text {
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+  </style>
+</head>
+
+<body>
+
+
+  <div id="loadingOverlay">
+    <div class="spinner"></div>
+    <div class="loading-text">Connecting to database...</div>
+  </div>
+
+
+  <header>
+
+    <div class="logo" onclick="showPage('browse')" style="cursor:pointer">
+      <img src="logo.png" alt="MBSTU logo" class="logo-img">
+      <span class="logo-text">MBSTU <span>Abason</span></span>
+    </div>
+    <div class="header-actions" id="headerActions">
+
+      <button class="btn btn-ghost" id="hdr_browse" onclick="showPage('browse')">Browse Messes</button>
+
+      <button class="btn btn-ghost" id="hdr_visitorLogin" onclick="showPage('visitorLogin')">User Login</button>
+
+      <button class="btn btn-ghost" id="hdr_ownerLogin" onclick="showPage('ownerLogin')">Owner Login</button>
+      <button class="btn btn-ghost" id="hdr_admin" onclick="showPage('adminLogin')">🛡️ Admin</button>
+      <button class="btn btn-primary" id="hdr_register" onclick="showPage('ownerRegister')">Register Mess</button>
+
+      <button class="btn btn-teal" id="hdr_myProfile" style="display:none" onclick="showPage('ownerDashboard')">My Profile</button>
+
+      <button class="btn btn-admin" id="hdr_adminProfile" style="display:none" onclick="showPage('adminDashboard')">🛡️ Admin Profile</button>
+
+      <button class="btn btn-ghost" id="hdr_logout" style="display:none" onclick="handleHeaderLogout()">Logout</button>
+
+
+      <button class="theme-toggle" onclick="toggleTheme()" id="themeToggleBtn" title="Toggle light/dark mode">
+        <div class="theme-toggle-knob" id="themeKnob">🌙</div>
+      </button>
+    </div>
+  </header>
+
+
+  <div class="hero" id="heroSection">
+    <div class="hero-glow"></div>
+    <h1>Find Your Perfect<br><em>Mess</em></h1>
+    <p>Browse verified mess listings near MBSTU — filter by price, amenities, and distance.</p>
+
+    <div class="hero-stats">
+      <div class="hero-stat"><strong id="heroStatTotal">—</strong><span>Listings</span></div>
+      <div class="hero-stat-divider"></div>
+      <div class="hero-stat"><strong>Town · Santosh · Kagmari</strong><span>Areas Covered</span></div>
+      <div class="hero-stat-divider"></div>
+      <div class="hero-stat"><strong>Verified</strong><span>By Admin</span></div>
+    </div>
+  </div>
+
+  <div class="main">
+
+
+    <div class="page active" id="page-browse">
+      <div class="filter-panel">
+        <div class="filter-panel-title">🎯 Filter Messes</div>
+        <div class="filter-grid">
+
+          <div class="filter-group">
+            <label>Mess Type</label>
+            <select id="f_type">
+              <option value="">Any</option>
+              <option value="BOYS">Boys</option>
+              <option value="GIRLS">Girls</option>
+            </select>
+          </div>
+
+          <div class="filter-group">
+            <label>Location Area</label>
+            <select id="f_location">
+              <option value="">Any</option>
+              <option value="TOWN">Town</option>
+              <option value="SANTOSH">Santosh</option>
+              <option value="KAGMARI">Kagmari</option>
+            </select>
+          </div>
+
+          <div class="filter-group">
+            <label>Max Rent (BDT)</label>
+            <input type="number" id="f_rent" placeholder="e.g. 3000" min="0">
+          </div>
+
+          <div class="filter-group">
+            <label>Max Distance (m)</label>
+            <input type="number" id="f_distance" placeholder="e.g. 1000" min="0">
+          </div>
+
+          <div class="filter-group">
+            <label>Min Seats Available</label>
+            <input type="number" id="f_seats" placeholder="e.g. 1" min="0">
+          </div>
+
+          <div class="filter-group">
+            <label>WiFi Required</label>
+            <select id="f_wifi">
+              <option value="">Any</option>
+              <option value="true">Yes</option>
+              <option value="false">No</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label>Meal System</label>
+            <select id="f_meal">
+              <option value="">Any</option>
+              <option value="true">Yes</option>
+              <option value="false">No</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label>Gas Required</label>
+            <select id="f_gas">
+              <option value="">Any</option>
+              <option value="true">Yes</option>
+              <option value="false">No</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label>Single Seat Available</label>
+            <select id="f_single">
+              <option value="">Any</option>
+              <option value="true">Yes</option>
+              <option value="false">No</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="filter-actions">
+          <button class="btn btn-primary" id="searchMessesBtn" onclick="applyFilters()">Search Messes</button>
+          <button class="btn btn-ghost" onclick="resetFilters()">Reset</button>
+        </div>
+      </div>
+
+      <div class="results-count" id="resultsCount"></div>
+
+      <div class="mess-grid" id="messGrid"></div>
+    </div>
+
+
+    <div class="page" id="page-visitorRegister">
+      <div class="form-card">
+        <div class="form-title">Create Community Account</div>
+        <div class="form-subtitle">A verified email and your name are required to review or report a mess.</div>
+        <div class="form-error" id="visitorRegError"></div>
+        <div class="form-success" id="visitorRegSuccess"></div>
+        <div class="form-group">
+          <label>Your Name *</label>
+          <input type="text" id="visitor_reg_name" placeholder="Your full name" autocomplete="name">
+        </div>
+        <div class="form-group">
+          <label>Email Address *</label>
+          <input type="email" id="visitor_reg_email" placeholder="yourname@email.com" autocomplete="email">
+        </div>
+        <div class="form-group">
+          <label>Password *</label>
+          <div class="password-field">
+            <input type="password" id="visitor_reg_password" placeholder="Minimum 6 characters" autocomplete="new-password">
+            <button type="button" class="pw-toggle" onclick="togglePasswordVisibility('visitor_reg_password', this)" aria-label="Toggle password">
+              <svg class="eye-icon eye-show" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              <svg class="eye-icon eye-hide" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+            </button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Confirm Password *</label>
+          <div class="password-field">
+            <input type="password" id="visitor_reg_confirm" placeholder="Repeat password" autocomplete="new-password">
+            <button type="button" class="pw-toggle" onclick="togglePasswordVisibility('visitor_reg_confirm', this)" aria-label="Toggle password">
+              <svg class="eye-icon eye-show" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              <svg class="eye-icon eye-hide" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+            </button>
+          </div>
+        </div>
+        <div class="form-actions">
+          <button class="btn btn-primary" onclick="registerVisitor()">Create Account</button>
+          <button class="btn btn-ghost" onclick="showPage('visitorLogin')">Already registered? Login</button>
+        </div>
+      </div>
+    </div>
+
+
+    <div class="page" id="page-visitorLogin">
+      <div class="form-card">
+        <div class="form-title">User Login</div>
+        <div class="form-subtitle">Log in with your verified email to submit reviews and reports.</div>
+        <div class="form-error" id="visitorLoginError"></div>
+        <div class="form-group">
+          <label>Email Address *</label>
+          <input type="email" id="visitor_login_email" placeholder="yourname@email.com" autocomplete="email">
+        </div>
+        <div class="form-group">
+          <label>Password *</label>
+          <div class="password-field">
+            <input type="password" id="visitor_login_password" placeholder="Your password" autocomplete="current-password">
+            <button type="button" class="pw-toggle" onclick="togglePasswordVisibility('visitor_login_password', this)" aria-label="Toggle password">
+              <svg class="eye-icon eye-show" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              <svg class="eye-icon eye-hide" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+            </button>
+          </div>
+        </div>
+        <div class="form-actions">
+          <button class="btn btn-primary" onclick="loginVisitor()">Login</button>
+          <button class="btn btn-ghost" onclick="showPage('visitorRegister')">Create Account</button>
+          <button class="btn btn-ghost" onclick="showPage('browse')">Cancel</button>
+        </div>
+        <div class="login-switch">Forgot your password? <a onclick="showPage('visitorForgot')">Reset it here</a></div>
+      </div>
+    </div>
+
+
+    <div class="page" id="page-visitorForgot">
+      <div class="form-card">
+        <div class="form-title">Recover Your Account</div>
+        <div class="form-subtitle">Enter your registered email and Firebase will send you a secure password reset link.</div>
+        <div class="form-error" id="visitorForgotError"></div>
+        <div class="form-success" id="visitorForgotSuccess"></div>
+        <div class="form-group">
+          <label>Registered Email *</label>
+          <input type="email" id="visitor_forgot_email" placeholder="yourname@email.com" autocomplete="email">
+        </div>
+
+        <div class="form-actions">
+          <button class="btn btn-primary" id="visitorForgotBtn" onclick="recoverVisitorAccount()">Send Password Reset Link</button>
+          <button class="btn btn-ghost" onclick="showPage('visitorLogin')">Back to Login</button>
+        </div>
+      </div>
+    </div>
+
+
+    <div class="page" id="page-ownerRegister">
+      <div class="form-card">
+        <div class="form-title">Register as Mess Owner</div>
+        <div class="form-subtitle">Create your account to manage mess listings.</div>
+
+        <div class="form-error" id="regError"></div>
+        <div class="form-success" id="regSuccess"></div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Full Name *</label>
+            <input type="text" id="reg_name" placeholder="Your full name">
+          </div>
+          <div class="form-group">
+            <label>Phone Number *</label>
+            <input type="text" id="reg_contact" placeholder="01XXXXXXXXX">
+          </div>
+          <div class="form-group full">
+            <label>Email Address * <span style="color:var(--accent);font-size:0.72rem">(Used for admin
+                notifications)</span></label>
+            <input type="email" id="reg_email" placeholder="yourname@email.com">
+          </div>
+          <div class="form-group full">
+            <label>Username *</label>
+            <input type="text" id="reg_username" placeholder="Choose a unique username">
+          </div>
+          <div class="form-group">
+            <label>Password *</label>
+            <div class="password-field">
+              <input type="password" id="reg_password" placeholder="Min 6 characters">
+              <button type="button" class="pw-toggle" onclick="togglePasswordVisibility('reg_password', this)" aria-label="Toggle password">
+<svg class="eye-icon eye-show" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+<svg class="eye-icon eye-hide" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+</button>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Confirm Password *</label>
+            <div class="password-field">
+              <input type="password" id="reg_confirm" placeholder="Repeat password">
+              <button type="button" class="pw-toggle" onclick="togglePasswordVisibility('reg_confirm', this)" aria-label="Toggle password">
+<svg class="eye-icon eye-show" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+<svg class="eye-icon eye-hide" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button class="btn btn-primary" onclick="registerOwner()">Create Account</button>
+          <button class="btn btn-ghost" onclick="showPage('ownerLogin')">Already registered? Login</button>
+        </div>
+      </div>
+    </div>
+
+
+    <div class="page" id="page-ownerLogin">
+      <div class="form-card">
+        <div class="form-title">Owner Login</div>
+        <div class="form-subtitle">Log in to manage your mess listings.</div>
+        <div class="form-error" id="loginError"></div>
+        <div class="form-group">
+          <label>Email Address</label>
+          <input type="email" id="login_username" placeholder="yourname@email.com" autocomplete="email">
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <div class="password-field">
+            <input type="password" id="login_password" placeholder="Your password">
+            <button type="button" class="pw-toggle" onclick="togglePasswordVisibility('login_password', this)" aria-label="Toggle password">
+<svg class="eye-icon eye-show" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+<svg class="eye-icon eye-hide" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+</button>
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button class="btn btn-primary" onclick="loginOwner()">Login</button>
+          <button class="btn btn-ghost" onclick="showPage('browse')">Cancel</button>
+        </div>
+        <div class="login-switch">Don't have an account? <a onclick="showPage('ownerRegister')">Register here</a></div>
+        <div class="login-switch" style="margin-top:6px">Forgot your password? <a onclick="showPage('ownerForgot')">Reset it here</a></div>
+      </div>
+    </div>
+
+
+    <div class="page" id="page-ownerForgot">
+      <div class="form-card">
+        <div class="form-title">Recover Your Account</div>
+        <div class="form-subtitle">Enter your registered email address and Firebase will send you a secure password reset link.</div>
+        <div class="form-error" id="forgotError"></div>
+        <div class="form-success" id="forgotSuccess"></div>
+        <div class="form-group">
+          <label>Registered Email *</label>
+          <input type="email" id="forgot_email" placeholder="yourname@email.com">
+        </div>
+
+        <div class="form-actions">
+          <button class="btn btn-primary" id="forgotBtn" onclick="recoverOwnerAccount()">Send Password Reset Link</button>
+          <button class="btn btn-ghost" onclick="showPage('ownerLogin')">Back to Login</button>
+        </div>
+      </div>
+    </div>
+
+
+    <div class="page" id="page-adminLogin">
+      <div class="form-card">
+        <div class="admin-login-badge">🛡️ Admin Access Only</div>
+        <div class="form-title">Admin Login</div>
+        <div class="form-subtitle">Restricted access — authorized personnel only.</div>
+        <div class="form-error" id="adminLoginError"></div>
+        <div class="form-group">
+          <label>Admin Email</label>
+          <input type="email" id="admin_username" placeholder="Admin email address">
+        </div>
+        <div class="form-group">
+          <label>Admin Password</label>
+          <div class="password-field">
+            <input type="password" id="admin_password" placeholder="Admin password">
+            <button type="button" class="pw-toggle" onclick="togglePasswordVisibility('admin_password', this)" aria-label="Toggle password">
+<svg class="eye-icon eye-show" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+<svg class="eye-icon eye-hide" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+</button>
+          </div>
+        </div>
+        <div class="form-actions">
+          <button class="btn btn-admin" onclick="loginAdmin()">🛡️ Login as Admin</button>
+          <button class="btn btn-ghost" onclick="showPage('browse')">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+
+    <div class="page" id="page-ownerDashboard">
+
+      <div class="profile-hero">
+        <div class="profile-info">
+          <div class="profile-name" id="ownerNameDisplay">Owner Name</div>
+          <div class="profile-contact">📞 <span id="ownerContactDisplay"></span></div>
+          <div class="profile-email">✉️ <span id="ownerEmailDisplay"></span></div>
+        </div>
+        <button class="btn btn-ghost btn-sm" onclick="toggleEditProfile()">✏️ Edit Profile</button>
+      </div>
+
+      <div id="editProfileSection" style="display:none">
+        <div class="form-card" style="margin-bottom:24px">
+          <div class="form-title">Edit Profile</div>
+          <div class="form-error" id="profileError"></div>
+          <div class="form-success" id="profileSuccess"></div>
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Full Name</label>
+              <input type="text" id="profile_name" placeholder="Your full name">
+            </div>
+            <div class="form-group">
+              <label>Phone Number</label>
+              <input type="text" id="profile_contact" placeholder="01XXXXXXXXX">
+            </div>
+            <div class="form-group full">
+              <label>Email Address <span style="color:var(--accent);font-size:0.72rem">(For admin
+                  notifications)</span></label>
+              <input type="email" id="profile_email" placeholder="yourname@email.com">
+            </div>
+          </div>
+          <div class="form-actions">
+            <button class="btn btn-primary" onclick="saveProfile()">Save Changes</button>
+            <button class="btn btn-ghost" onclick="toggleEditProfile()">Cancel</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="stats-row" id="ownerStats"></div>
+
+      <div class="nav-tabs">
+        <button class="nav-tab active" id="tab-btn-myListings" onclick="switchOwnerTab('myListings', this)">📋 My
+          Listings</button>
+        <button class="nav-tab" id="tab-btn-addMess" onclick="switchOwnerTab('addMess', this)">+ Add New Mess</button>
+      </div>
+
+      <div id="tab-myListings">
+        <div class="mess-grid" id="ownerMessGrid"></div>
+      </div>
+
+      <div id="tab-addMess" style="display:none">
+        <div class="form-card" style="max-width:100%">
+          <div class="form-title" id="messFormTitle">Add New Mess / Sublet</div>
+          <div class="form-subtitle">All information will be visible to students browsing the site.</div>
+          <div class="form-error" id="messFormError"></div>
+          <div class="form-grid">
+
+            <div class="form-group"><label>Mess Name *</label><input type="text" id="mf_name"
+                placeholder="e.g. Al-Amin Mess"></div>
+            <div class="form-group"><label>Mess Type *</label><select id="mf_type">
+                <option value="BOYS">Boys</option>
+                <option value="GIRLS">Girls</option>
+              </select></div>
+            <div class="form-group"><label>Location Area *</label><select id="mf_location">
+                <option value="TOWN">Town</option>
+                <option value="SANTOSH">Santosh</option>
+                <option value="KAGMARI">Kagmari</option>
+              </select></div>
+            <div class="form-group"><label>Distance from MBSTU (m) *</label><input type="number" id="mf_distance"
+                placeholder="e.g. 500" min="0"></div>
+            <div class="form-group full"><label>Specific Address *</label><input type="text" id="mf_address"
+                placeholder="Street, Village, House No."></div>
+
+            <div class="form-group"><label>Rent Per Seat (BDT) *</label><input type="number" id="mf_rent"
+                placeholder="e.g. 2500" min="1"></div>
+            <div class="form-group"><label>House Type</label><select id="mf_buildingtype">
+                <option value="BUILDING">Building</option>
+                <option value="TINSHED">Tin-shed</option>
+              </select></div>
+            <div class="form-group"><label>People Per Shared Room (max)</label><input type="number" id="mf_ppr"
+                placeholder="e.g. 2" min="1" value="2"></div>
+            <div class="form-group"><label>Electricity Lines</label><input type="number" id="mf_elec"
+                placeholder="e.g. 1" min="1" value="1"></div>
+
+            <div class="form-divider">Seat Availability</div>
+            <div class="form-group"><label>Shared Room Seats — This Month *</label><input type="number" id="mf_seats_multi_this"
+                placeholder="e.g. 3" min="0" value="0"></div>
+            <div class="form-group"><label>Shared Room Seats — Next Month</label><input type="number" id="mf_seats_multi_next"
+                placeholder="e.g. 3" min="0" value="0"></div>
+
+            <div class="form-group"><label>Single Seat Available</label><select id="mf_single"
+              onchange="toggleSingleInput()">
+              <option value="false">No</option>
+              <option value="true">Yes</option>
+              </select></div>
+            <div class="form-group" id="singleCostGroup" style="display:none"><label>Single Seat Cost
+              (BDT)</label><input type="number" id="mf_singlecost" placeholder="e.g. 4000" min="0" value="0"></div>
+            <div class="form-group" id="singleSeatsThisGroup" style="display:none"><label>Single Room Seats — This Month</label><input type="number" id="mf_seats_single_this"
+              placeholder="e.g. 2" min="0" value="0"></div>
+            <div class="form-group" id="singleSeatsNextGroup" style="display:none"><label>Single Room Seats — Next Month</label><input type="number" id="mf_seats_single_next"
+              placeholder="e.g. 2" min="0" value="0"></div>
+
+            <div class="form-divider">Amenities</div>
+
+            <div class="form-group"><label>WiFi Available</label><select id="mf_wifi">
+                <option value="false">No</option>
+                <option value="true">Yes</option>
+              </select></div>
+            <div class="form-group"><label>Gas Available</label><select id="mf_gas">
+                <option value="false">No</option>
+                <option value="true">Yes</option>
+              </select></div>
+            <div class="form-group"><label>Tiled Room</label><select id="mf_tiled">
+                <option value="false">No</option>
+                <option value="true">Yes</option>
+              </select></div>
+
+            <div class="form-group"><label>Meal System</label><select id="mf_meal" onchange="toggleMealInput()">
+                <option value="false">No</option>
+                <option value="true">Yes</option>
+              </select></div>
+            <div class="form-group" id="mealDayGroup" style="display:none"><label>Meals Per Day</label><input
+                type="number" id="mf_mealsday" placeholder="1-3" min="1" max="3" value="2"></div>
+
+            <div class="form-divider">Location on Map (Optional)</div>
+            <div class="form-group full"><label>Google Maps Link</label><input type="url" id="mf_maplink"
+                placeholder="e.g. https://maps.google.com/?q=24.2512,89.9185">
+              <div style="font-size:0.75rem;color:var(--muted);margin-top:4px">Optional — paste a Google Maps link so
+                students can find the exact location. Skip this if you'd rather not share it.</div>
+            </div>
+
+            <div class="form-divider">Mess Photos (Optional — up to 6 images)</div>
+            <div class="form-group full">
+              <label>Upload Mess Images</label>
+              <div class="img-upload-area" onclick="document.getElementById('mf_image_input').click()">
+                <input type="file" id="mf_image_input" accept="image/*" multiple onchange="previewImages(event)"
+                  style="display:none">
+                <div class="img-upload-label">📷 Click to upload photos (select multiple at once)</div>
+              </div>
+
+              <div class="img-preview-grid" id="mf_image_preview_grid"></div>
+
+              <input type="hidden" id="mf_image_data" value="">
+            </div>
+            <div class="form-group full"><label>Description / Notes</label><textarea id="mf_desc"
+                placeholder="Rules, facilities, nearby landmarks, etc."></textarea></div>
+          </div>
+
+          <input type="hidden" id="mf_editId" value="">
+          <div class="form-actions">
+            <button class="btn btn-primary" id="saveBtn" onclick="saveMess()">Save Listing</button>
+            <button class="btn btn-ghost" onclick="cancelEdit()">Cancel</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+
+    <div class="page" id="page-adminDashboard">
+      <div class="admin-header">
+        <div class="admin-info">
+          <div class="admin-badge-label">🛡️ Admin Panel</div>
+          <div class="name">MBSTU Abason — Admin Control</div>
+          <div class="role">Full access · All listings visible</div>
+        </div>
+        <button class="btn btn-ghost btn-sm" onclick="logoutAdmin()">Logout</button>
+      </div>
+
+      <div class="stats-row" id="adminStats"></div>
+
+      <div class="nav-tabs">
+        <button class="nav-tab active" onclick="switchAdminTab('allMesses', this)">📋 All Messes</button>
+        <button class="nav-tab" onclick="switchAdminTab('allOwners', this)">👤 All Owners</button>
+        <button class="nav-tab" onclick="switchAdminTab('reports', this)">🚩 Reports <span id="reportsTabBadge" class="tab-badge" style="display:none"></span></button>
+      </div>
+
+      <div id="tab-allMesses">
+        <div class="admin-search-bar">
+          <input type="text" id="adminSearchInput" placeholder="🔍 Search by mess name, owner, location..."
+            oninput="adminSearchMesses()">
+        </div>
+        <div class="mess-grid" id="adminMessGrid"></div>
+      </div>
+
+      <div id="tab-allOwners" style="display:none">
+
+        <div class="broadcast-panel">
+          <div class="broadcast-title">📧 Send Notification Email to All Owners</div>
+          <div class="broadcast-subtitle">This will send one email to every registered owner at once.</div>
+          <div class="form-error" id="broadcastError"></div>
+          <div class="form-success" id="broadcastSuccess"></div>
+          <div class="form-group" style="margin-bottom:12px">
+            <label>Email Subject *</label>
+            <input type="text" id="broadcast_subject" placeholder="e.g. Please update your mess information">
+          </div>
+          <div class="form-group" style="margin-bottom:16px">
+            <label>Message *</label>
+            <textarea id="broadcast_message" placeholder="Write your message to all owners here..."
+              style="min-height:100px"></textarea>
+          </div>
+          <div class="form-actions">
+            <button class="btn btn-admin" id="broadcastBtn" onclick="sendBroadcastEmail()">📧 Send to All
+              Owners</button>
+
+            <div class="broadcast-count" id="broadcastCount"></div>
+          </div>
+        </div>
+
+        <div class="owners-table-wrap">
+          <table class="owners-table">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Username</th>
+                <th>Phone</th>
+                <th>Email</th>
+                <th>Listings</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="ownersTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div id="tab-reports" style="display:none">
+        <div id="reportsList"></div>
+      </div>
+    </div>
+
+
+    <div class="page" id="page-adminEditMess">
+      <div class="admin-edit-banner">🛡️ Admin Edit Mode — Changes apply immediately</div>
+      <div class="form-card" style="max-width:100%">
+        <div class="form-title" id="adminMessFormTitle">Edit Mess</div>
+        <div class="form-subtitle">You are editing this listing as Admin. The owner will see changes on next login.
+        </div>
+        <div class="form-error" id="adminMessFormError"></div>
+        <div class="form-grid">
+
+          <div class="form-group"><label>Mess Name *</label><input type="text" id="amf_name"
+              placeholder="e.g. Al-Amin Mess"></div>
+          <div class="form-group"><label>Mess Type *</label><select id="amf_type">
+              <option value="BOYS">Boys</option>
+              <option value="GIRLS">Girls</option>
+            </select></div>
+          <div class="form-group"><label>Location Area *</label><select id="amf_location">
+              <option value="TOWN">Town</option>
+              <option value="SANTOSH">Santosh</option>
+              <option value="KAGMARI">Kagmari</option>
+            </select></div>
+          <div class="form-group"><label>Distance from MBSTU (m)</label><input type="number" id="amf_distance" min="0">
+          </div>
+          <div class="form-group full"><label>Specific Address *</label><input type="text" id="amf_address"></div>
+          <div class="form-group"><label>Rent Per Seat (BDT) *</label><input type="number" id="amf_rent" min="1"></div>
+          <div class="form-group"><label>House Type</label><select id="amf_buildingtype">
+              <option value="BUILDING">Building</option>
+              <option value="TINSHED">Tin-shed</option>
+            </select></div>
+          <div class="form-group"><label>People Per Shared Room (max)</label><input type="number" id="amf_ppr" min="1"></div>
+          <div class="form-group"><label>Electricity Lines</label><input type="number" id="amf_elec" min="1"></div>
+
+          <div class="form-divider">Seat Availability</div>
+            <div class="form-group"><label>Shared Room Seats — This Month *</label><input type="number" id="amf_seats_multi_this"
+              min="0"></div>
+            <div class="form-group"><label>Shared Room Seats — Next Month</label><input type="number" id="amf_seats_multi_next"
+              min="0"></div>
+
+            <div class="form-group"><label>Single Seat Available</label><select id="amf_single"
+              onchange="toggleAdminSingleInput()">
+              <option value="false">No</option>
+              <option value="true">Yes</option>
+            </select></div>
+            <div class="form-group" id="adminSingleCostGroup" style="display:none"><label>Single Seat Cost
+              (BDT)</label><input type="number" id="amf_singlecost" min="0" value="0"></div>
+            <div class="form-group" id="adminSingleSeatsThisGroup" style="display:none"><label>Single Room Seats — This Month</label><input type="number" id="amf_seats_single_this"
+              min="0"></div>
+            <div class="form-group" id="adminSingleSeatsNextGroup" style="display:none"><label>Single Room Seats — Next Month</label><input type="number" id="amf_seats_single_next"
+              min="0"></div>
+
+            <div class="form-divider">Amenities</div>
+          <div class="form-group"><label>WiFi Available</label><select id="amf_wifi">
+              <option value="false">No</option>
+              <option value="true">Yes</option>
+            </select></div>
+          <div class="form-group"><label>Gas Available</label><select id="amf_gas">
+              <option value="false">No</option>
+              <option value="true">Yes</option>
+            </select></div>
+          <div class="form-group"><label>Tiled Room</label><select id="amf_tiled">
+              <option value="false">No</option>
+              <option value="true">Yes</option>
+            </select></div>
+          <div class="form-group"><label>Meal System</label><select id="amf_meal" onchange="toggleAdminMealInput()">
+              <option value="false">No</option>
+              <option value="true">Yes</option>
+            </select></div>
+          <div class="form-group" id="adminMealDayGroup" style="display:none"><label>Meals Per Day</label><input
+              type="number" id="amf_mealsday" min="1" max="3" value="2"></div>
+          <div class="form-divider">Location on Map (Optional)</div>
+          <div class="form-group full"><label>Google Maps Link</label><input type="url" id="amf_maplink"
+              placeholder="e.g. https://maps.google.com/?q=24.2512,89.9185"></div>
+          <div class="form-group full"><label>Description / Notes</label><textarea id="amf_desc"></textarea></div>
+
+          <div class="form-divider">Manage Photos</div>
+          <div class="form-group full">
+            <label style="margin-bottom:2px">Current Photos</label>
+            <p style="color:var(--muted);font-size:0.78rem;margin-bottom:10px">Remove any sensitive, inappropriate, or fake photos the owner uploaded. This takes effect immediately — no need to click "Save Changes".</p>
+            <div class="img-preview-grid" id="amf_image_preview_grid"></div>
+          </div>
+        </div>
+
+        <input type="hidden" id="amf_editId" value="">
+        <div class="form-actions">
+          <button class="btn btn-admin" id="adminSaveBtn" onclick="adminSaveMess()">🛡️ Save Changes</button>
+          <button class="btn btn-ghost" onclick="showPage('adminDashboard')">Cancel</button>
+        </div>
+
+        <div class="admin-danger-zone">
+          <div class="admin-danger-zone-title">⚠️ Danger Zone</div>
+          <p style="color:var(--muted);font-size:0.8rem;margin-bottom:10px">Permanently delete this listing. This cannot be undone.</p>
+          <button class="btn btn-danger btn-sm" onclick="adminDeleteFromEditPage()">🗑️ Delete This Mess Permanently</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+
+
+
+  <div class="modal-overlay" id="detailModal" onclick="closeDetailModal(event)">
+    <div class="modal" id="detailModalContent"></div>
+  </div>
+
+  <div class="modal-overlay reviews-page-overlay" id="reviewsModal" onclick="closeReviewsModal(event)">
+    <div class="modal reviews-page-modal" id="reviewsModalContent"></div>
+  </div>
+
+
+  <div class="modal-overlay" id="deleteModal" onclick="closeDeleteModal(event)">
+    <div class="del-modal">
+      <div class="del-modal-title">🗑️ Delete Listing</div>
+      <p style="color:var(--muted);font-size:0.9rem;margin-bottom:8px">Are you sure you want to permanently delete:</p>
+
+      <p id="deleteMessName" style="font-family:'Syne',sans-serif;font-weight:700;font-size:1rem;color:var(--text)"></p>
+      <p id="deleteModalNote" style="color:var(--muted);font-size:0.85rem;margin-top:8px">This action cannot be undone.
+      </p>
+      <div class="del-modal-actions">
+        <button class="btn btn-danger" onclick="confirmDelete()">Yes, Delete</button>
+        <button class="btn btn-ghost" onclick="closeDeleteModal()">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+
+  <div class="modal-overlay" id="ownerDeleteModal" onclick="closeOwnerDeleteModal(event)">
+    <div class="del-modal">
+      <div class="del-modal-title">🗑️ Remove Owner Account</div>
+      <p style="color:var(--muted);font-size:0.9rem;margin-bottom:8px">Remove this owner and all their listings?</p>
+
+      <p id="deleteOwnerName" style="font-family:'Syne',sans-serif;font-weight:700;font-size:1rem;color:var(--text)">
+      </p>
+      <p style="color:#f87171;font-size:0.85rem;margin-top:8px">⚠️ All messes by this owner will also be deleted.</p>
+      <div class="del-modal-actions">
+        <button class="btn btn-danger" onclick="confirmOwnerDelete()">Yes, Remove</button>
+        <button class="btn btn-ghost" onclick="closeOwnerDeleteModal()">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+
+  <div class="modal-overlay" id="reportDeleteModal" onclick="closeReportDeleteModal(event)">
+    <div class="del-modal">
+      <div class="del-modal-title">🗑️ Delete Report</div>
+      <p style="color:var(--muted);font-size:0.9rem;margin-bottom:8px">Delete the resolved report for:</p>
+      <p id="deleteReportMessName" style="font-family:'Syne',sans-serif;font-weight:700;font-size:1rem;color:var(--text)"></p>
+      <p style="color:var(--muted);font-size:0.85rem;margin-top:8px">This action cannot be undone.</p>
+      <div class="del-modal-actions">
+        <button class="btn btn-danger" onclick="confirmReportDelete()">Yes, Delete</button>
+        <button class="btn btn-ghost" onclick="closeReportDeleteModal()">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+
+  <div class="modal-overlay" id="reportModal" onclick="closeReportModal(event)">
+    <div class="del-modal" style="text-align:left">
+      <div class="del-modal-title">🚩 Report This Mess</div>
+      <p style="color:var(--muted);font-size:0.85rem;margin-bottom:14px">Reporting: <strong id="reportMessName" style="color:var(--text)"></strong></p>
+      <div class="form-error" id="reportError"></div>
+      <div class="form-success" id="reportSuccess"></div>
+      <div class="form-group" style="margin-bottom:12px">
+        <label>Reason *</label>
+        <select id="report_reason" onchange="toggleReportFakeInfo()">
+          <option value="FAKE_MESS">Fake Mess — doesn't exist / not a real listing</option>
+          <option value="FAKE_INFO">Fake Information — rent, photos, seats, etc. are wrong</option>
+          <option value="OTHER">Other</option>
+        </select>
+      </div>
+      <div class="form-group" id="reportFakeInfoGroup" style="display:none;margin-bottom:12px">
+        <label>Which information is fake? *</label>
+        <input type="text" id="report_fakeinfo" placeholder="e.g. Rent, Photos, Seat count, Address...">
+      </div>
+      <div class="form-group" style="margin-bottom:12px">
+        <label>Details *</label>
+        <textarea id="report_details" placeholder="Explain what's wrong..." style="min-height:80px"></textarea>
+      </div>
+      <div class="del-modal-actions" style="margin-top:16px">
+        <button class="btn btn-danger" id="reportSubmitBtn" onclick="submitReport()">Submit Report</button>
+        <button class="btn btn-ghost" onclick="closeReportModal()">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+
+  <div class="toast" id="toast"></div>
+
+
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+  <script type="module" src="script.js"></script>
+</body>
+
+</html>
